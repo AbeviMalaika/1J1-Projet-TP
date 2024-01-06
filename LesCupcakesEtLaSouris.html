@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Semaine 11 - Exercice 5 / Le poulet gagne ou perd</title>
+        <style type="text/css">
+            canvas {
+                border: 2px solid rgb(235, 75, 115);
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas width="1000" height="620"></canvas>
+        <script>
+            //Récuperation du canvas
+            let leCanvas = document.querySelector("canvas");
+            let ctx = leCanvas.getContext("2d");
+
+            //Affichage de l'arrière-plan
+            leCanvas.style.backgroundImage = "url('images/introJeu.png')";
+
+            /****************************************************LES OBJETS ET VARIABLES****************/
+
+            //La patissière, il s'agit du joueur
+            let laPatissiere = {
+                img: new Image(), //image
+                urlImage: "images/arretBas.png", //url de l'image de départ
+                x: 0, //Position sur l'axe des x
+                y: 0, //Position sur l'axe des y
+                largeur: 56, //Largeur d'une vignette de la patissière
+                hauteur: 98, //Hauteur d'une vignette de la patissière
+                indexVignette: 0, //Première vignette
+                nbVignettes: 9, //Nombre de vignettes
+                sourceX: 0, //Coordonnée x de la vignette à afficher
+                vitesse: 2 //Vitesse du joueur
+            }
+            //Charger l'image initiale de la patissière (arrêt vers le bas)
+            laPatissiere.img.src = laPatissiere.urlImage;
+
+            //Placer la patissière au milieu et au centre du canvas
+            laPatissiere.x = leCanvas.width/2 - laPatissiere.largeur/2;
+            laPatissiere.y = leCanvas.height/2 - laPatissiere.hauteur/2;
+
+            //La souris, il s'agit de l'ennemie
+            let laSouris = {
+                img: new Image(), //image
+                urlImage: "images/souris/tile000.png",//url de l'image de départ
+                x: 0, //Position sur l'axe des x
+                y: 0,//Position sur l'axe des y
+                largeur: 50, //Largeur d'une vignette de la souris
+                hauteur: 32,//Hauteur d'une vignette de la souris
+                indexVignette: 0, //Première vignette
+                nbVignettes: 6, //Nombre de vignettes
+                sourceX: 0, //Coordonnée x de la vignette à afficher
+                vitesseX: 2.5, //Vitesse de la souris verticalement
+                vitesseY: 1.8 //Vitesse de la souris horizontalement
+            }
+            //Charger l'image de la souris, comme il part de la droite et de l'extérieur du canvas, l'image initiale sera en course vers la gauche
+            laSouris.img.src = laSouris.urlImage;
+
+            //Placer la souris au bas à droite du terrain de jeu
+            laSouris.x = leCanvas.width - 155;
+            laSouris.y = leCanvas.height - 75;
+
+
+            //Les trois objets client
+            ///////////////////////////////Premier client
+            let leClient1 = {
+                img: new Image(), //image
+                urlImage: "images/clientDroite" + Math.ceil(Math.random()*6) + ".png", //url de l'image de départ
+                x: 0, //Position sur l'axe des x
+                y: 182, //Position sur l'axe des y
+                largeur: 56, //Largeur d'une vignette du client #1
+                hauteur: 98, //Hauteur d'une vignette du client #1
+                indexVignette: 0, //Première vignette
+                nbVignettes: 9, //Nombre de vignettes
+                sourceX: 0, //Coordonnée x de la vignette à afficher
+                vitesse: 1.5, //Vitesse du client #1
+                numClient: 1, //Numéro pour identifie le client
+                estServi: false //Propriété pour indiquer que le client  été servi
+            }
+            //Charger l'image initiale du client #1 (arrêt vers le bas)
+            leClient1.img.src = leClient1.urlImage;
+
+            ///////////////////////////////Premier client
+            let leClient2 = {
+                img: new Image(), //image
+                urlImage: "images/clientDroite" + Math.ceil(Math.random()*6) + ".png", //url de l'image de départ
+                x: 0, //Position sur l'axe des x
+                y: 267, //Position sur l'axe des y
+                largeur: 56, //Largeur d'une vignette du client #2
+                hauteur: 98, //Hauteur d'une vignette du client #2
+                indexVignette: 0, //Première vignette
+                nbVignettes: 9, //Nombre de vignettes
+                sourceX: 0, //Coordonnée x de la vignette à afficher
+                vitesse: 1.5, //Vitesse du client #2
+                numClient: 2,//Numéro pour identifie le client
+                estServi: false//Propriété pour indiquer que le client  été servi
+            }
+            //Charger l'image initiale du client #2 (arrêt vers le bas)
+            leClient2.img.src = leClient2.urlImage;
+
+            ///////////////////////////////Premier client
+            let leClient3 = {
+                img: new Image(), //image
+                urlImage: "images/clientDroite3.png", //url de l'image de départ
+                x: 0, //Position sur l'axe des x
+                y: 352, //Position sur l'axe des y
+                largeur: 56, //Largeur d'une vignette du client #3
+                hauteur: 98, //Hauteur d'une vignette du client #3
+                indexVignette: 0, //Première vignette
+                nbVignettes: 9, //Nombre de vignettes
+                sourceX: 0, //Coordonnée x de la vignette à afficher
+                vitesse: 1.5, //Vitesse du client #3
+                numClient: 3, //Numéro pour identifie le client
+                estServi: false//Propriété pour indiquer que le client  été servi
+            }
+            //Charger l'image initiale du client #3 (arrêt vers le bas)
+            leClient3.img.src = leClient3.urlImage;
+
+
+
+            //////////////////// Les bases de cupcakes
+            /////Première base de cupcake
+            let baseCupcake1 = {
+                img: new Image(), //image
+                urlImage: "images/cupcake.png", //url de l'image de cupcake de base
+                x: 0, //Position sur l'axe des X
+                y: 300, //Position sur l'axe des Y
+                largeur: 31, //Largeur de la base de cupcake
+                hauteur: 40, //Hauteur de la base de cupcake
+                estAttrape: false //Propriété pour définir si l'objet base de cupcake a été attrapé ou non
+            }
+            //Charger l'image du cupcake de base
+            baseCupcake1.img.src = baseCupcake1.urlImage
+            /*
+            Variables pour définir une position X maximale et un position Y maximale pour éviter la redondance dans le code
+            Comme les dimentions des deux sont égales, les propriétés de l'objet baseCupcake1 serviront de référence
+            */
+            let xBaseMax = leCanvas.width - baseCupcake1.largeur - 75;
+            let yBaseMax = leCanvas.height - baseCupcake1.hauteur - 27;
+
+            //Position au hasard du cupcake de base dans le canvas
+            //Sur l'axe horizontal
+            baseCupcake1.x = Math.random()*(leCanvas.width - 285) + 285;
+            //Sur l'axe vertical
+            baseCupcake1.y = Math.random()*(leCanvas.height - 230) + 230;
+
+            //Si la base de cupcake apparait à l'extérieur des limites du jeu, il est repositionné à la limite du jeu
+            //Horizontalement
+            if(baseCupcake1.x > xBaseMax){
+                baseCupcake1.x = xBaseMax;
+            }
+            //Verticalement
+            if(baseCupcake1.y > yBaseMax){
+                baseCupcake1.y = yBaseMax;
+            }
+
+            //////Deuxième base de cupcake
+            let baseCupcake2 = {
+                img: new Image(), //image
+                urlImage: "images/cupcake.png", //url de l'image de cupcake de base
+                x: 0, //Position sur l'axe des X
+                y: 0, //Position sur l'axe des Y
+                largeur: 31, // Largeur de la base de cupcake
+                hauteur: 40, // Hauteur de la base de cupcake
+                estAttrape: false //Propriété pour définir si l'objet base de cupcake a été attrapé ou non
+            }
+            //Charger l'image du cupcake de base
+            baseCupcake2.img.src = baseCupcake2.urlImage
+            //Position au hasard du cupcake de base dans le canvas
+            //Sur l'axe horizontal
+            baseCupcake2.x = Math.random()*(leCanvas.width - 285) + 285;
+            //Sur l'axe vertical
+            baseCupcake2.y = Math.random()*(leCanvas.height - 230) + 230;
+
+            //Si la base du cupcake apparait à l'extérieur des limites du jeu, il est repositionné à la limite du jeu
+            //Horizontalement
+            if(baseCupcake2.x > xBaseMax){
+                baseCupcake2.x = xBaseMax;
+            }
+            //Verticalement
+            if(baseCupcake2.y > yBaseMax){
+                baseCupcake2.y = yBaseMax;
+            }
+
+
+            ////////////////Les objets pour les fruits
+            ///////////////////////////////////////////////////////////Premier objet fruit
+            let fruitNumero1 = {
+                img: new Image(), //Image
+                urlImage: "images/fruit1.png",//url de l'image de départ pour le fruit #1
+                x: 0, //Position sur l'axe des X
+                y: 0, //Position sur l'axe des Y
+                largeur: 31, //Largeur du fruit
+                hauteur: 30, //Hauteur du fruit
+                numFruit: 1, //Propriété pour enregistrer le numero de fruit est à la source de l'image, initialement, elle est à 1 (pour bleuet)
+                estAttrape: false //Propriété pour définir si l'objet base de cupcake a été attrapé ou non
+            }
+            /*
+            Variables pour définir une position X maximale et un position Y maximale pour éviter la redondance dans le code
+            Comme les dimentions de tous les fruits sont égales, les propriétés de l'objet fruitNumero1 serviront de référence
+            */
+            let xFruitMax = leCanvas.width - fruitNumero1.largeur - 75;
+            let yFruitMax = leCanvas.height - fruitNumero1.hauteur - 27;
+
+            console.log(fruitNumero1.x);
+            //Charger l'image du premier fruit
+            fruitNumero1.img.src = fruitNumero1.urlImage;
+
+            //Position au hasard du fruit dans le canvas
+            //Sur l'axe horizontal
+            fruitNumero1.x = Math.random()*(leCanvas.width - 285) + 285;
+            //Sur l'axe vertical
+            fruitNumero1.y = Math.random()*(leCanvas.height - 230) + 230;
+
+            //Si le fruit apparait à l'extérieur des limites du jeu, il est repositionné à la limite du jeu
+            //Horizontalement
+            if(fruitNumero1.x > xFruitMax){
+                fruitNumero1.x = xFruitMax;
+            }
+            //Verticalement
+            if(fruitNumero1.y > yFruitMax){
+                fruitNumero1.y = yFruitMax;
+            }
+
+
+            ////////////////////////////////////////////////////////////////////Deuxième objet fruit
+            let fruitNumero2 = {
+                img: new Image(), //Image
+                urlImage: "images/fruit2.png",//url de l'image de départ pour le fruit #2
+                x: 0, //Position sur l'axe des X
+                y: 0, //Position sur l'axe des Y
+                largeur: 31, //Largeur du fruit
+                hauteur: 30, //Hauteur du fruit
+                numFruit: 2, //Propriété pour enregistrer le numero de fruit est à la source de l'image, initialement, elle est à 2 (pour fraise)
+                estAttrape: false //Propriété pour définir si l'objet fruit a été attrapé ou non
+            }
+            //Charger l'image du deuxième fruit
+            fruitNumero2.img.src = fruitNumero2.urlImage;
+
+            //Position au hasard du fruit dans le canvas au démarrage
+            //Sur l'axe horizontal
+            fruitNumero2.x = Math.random()*(leCanvas.width - 285) + 285;
+            //Sur l'axe vertical
+            fruitNumero2.y = Math.random()*(leCanvas.height - 230) + 230;
+
+            //Si le fruit apparait à l'extérieur des limites du jeu, il est repositionné à la limite du jeu
+            //Horizontalement
+            if(fruitNumero2.x > xFruitMax){
+                fruitNumero2.x = xFruitMax;
+            }
+            //Verticalement
+            if(fruitNumero2.y > yFruitMax){
+                fruitNumero2.y = yFruitMax;
+            }
+
+
+            ///////////////////////////////////////////////////////////Troisième objet fruit
+            let fruitNumero3 = {
+                img: new Image(), //Image
+                urlImage: "images/fruit3.png",//url de l'image de départ pour le fruit #3
+                x: 0, //Position su rl'axe des X
+                y: 0, //Position sur l'axe des Y
+                largeur: 31, //Largeur du fruit
+                hauteur: 30, //Hauteur du fruit
+                numFruit: 3, //Propriété pour enregistrer le numero de fruit est à la source de l'image, initialement, elle est à 3 (pour citron)
+                estAttrape: false //Propriété pour définir si l'objet fruit a été attrapé ou non
+            }
+            //Charger l'image du deuxième fruit
+            fruitNumero3.img.src = fruitNumero3.urlImage;
+
+            //Position au hasard du fruit dans le canvas
+            //Sur l'axe horizontal
+            fruitNumero3.x = Math.random()*(leCanvas.width - 285) + 285;
+            //Sur l'axe vertical
+            fruitNumero3.y = Math.random()*(leCanvas.height - 230) + 230;
+
+            //Si le fruit apparait à l'extérieur des limites du jeu, il est repositionné à la limite du jeu
+            //Horizontalement
+            if(fruitNumero3.x > xFruitMax){
+                fruitNumero3.x = xFruitMax;
+            }
+            //Verticalement
+            if(fruitNumero3.y > yFruitMax){
+                fruitNumero3.y = yFruitMax;
+            }
+
+
+            //Le cupcake avec sa saveur
+            let cupcakeSaveur = {
+                img: new Image(), //Image
+                urlImage: "images/cupcake.png", //url de l'image du cupcake avec une saveur
+                x: -100, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: -100, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 31,
+                hauteur: 40,
+                numCupcake: 0
+            }
+            //Charger l'image du cupcake avec celle de base
+            cupcakeSaveur.img.src = cupcakeSaveur.urlImage;
+            
+            //Les 3 cupcakes avec une saveur aléatoire pour les commandes des clients
+            ///////////////////////////////////////Premier objet cupcake de commande client
+            let noHazardCupClient1 = Math.ceil(Math.random()*3);
+            let cupcakeClient1 = {
+                img: new Image(), //Image
+                urlImage: "images/cupcakeSaveur" + noHazardCupClient1 + ".png", //url de l'image du cupcake avec une saveur
+                identifiant: "cupcakeClient1",
+                x: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 31,
+                hauteur: 40,
+                numCupcake: noHazardCupClient1
+            }
+            //Charger l'image du cupcake avec celle de base
+            cupcakeClient1.img.src = cupcakeClient1.urlImage;
+
+            ///////////////////////////////////////Premier objet cupcake de commande client
+            let noHazardCupClient2 = Math.ceil(Math.random()*3);
+            let cupcakeClient2 = {
+                img: new Image(), //Image
+                urlImage: "images/cupcakeSaveur" + noHazardCupClient2 + ".png", //url de l'image du cupcake avec une saveur
+                x: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 31,
+                hauteur: 40,
+                numCupcake: noHazardCupClient2
+            }
+            //Charger l'image du cupcake avec celle de base
+            cupcakeClient2.img.src = cupcakeClient2.urlImage;
+
+            ///////////////////////////////////////Premier objet cupcake de commande client
+            let noHazardCupClient3 = Math.ceil(Math.random()*3);
+            let cupcakeClient3 = {
+                img: new Image(), //Image
+                urlImage: "images/cupcakeSaveur" + noHazardCupClient3 + ".png", //url de l'image du cupcake avec une saveur
+                x: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 31,
+                hauteur: 40,
+                numCupcake: noHazardCupClient3
+            }
+            //Charger l'image du cupcake avec celle de base
+            cupcakeClient3.img.src = cupcakeClient3.urlImage;
+
+            //Bulle de dialogue pour les commandes des clients
+            let bulleClient = {
+                img: new Image(), //Image
+                urlImage: "images/bulleDialogue.png", //url de l'image du cupcake avec une saveur
+                x: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 54,
+                hauteur: 68
+            }
+            //Charger l'image de la bulle de dialogue
+            bulleClient.img.src = bulleClient.urlImage;
+
+            //Coeur qui s'affiche lorsque le client est servi
+            let coeur = {
+                img: new Image(), //Image
+                urlImage: "images/coeur.png", //url de l'image du cupcake avec une saveur
+                x: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position X est à -100
+                y: 0, //Pour qu'initialement, il apparaisse en dehors du canvas, la position Y est a -100
+                largeur: 34,
+                hauteur: 30
+            }
+            //Charger l'image du coeur
+            coeur.img.src = coeur.urlImage;
+
+            //Les flèches
+            let fleches = {
+                gauche: false,
+                droite: false,
+                haut: false,
+                bas: false
+            };
+
+            //Variables pour la délimitation du terrain de jeu
+            let limiteXMax = leCanvas.width - 78;
+            let limiteYMax = leCanvas.height - 26;
+            let limiteXMin = 280;
+            let limiteYMin = 227;
+
+            //Variable pour enregistrer la minuterie du jeu
+            let minuterie = 90;
+
+            //Variable pour enregistrer le score du joueur
+            let score = 0;
+
+            //Variable pour déterminer si un fruit a été attrapé
+            let fruitAttrape = false;
+
+            //Variable pour enregistrer le nom du fruit qui a été attrapé
+            let nomFruitAttrape;
+
+            //Variable pour déterminer si une base de cupcake a été attrapé
+            let baseCupcakeAttrape = false;
+
+            //Variable pour déterminée si c'est la fin du jeu 
+            let finJeu = false;
+
+            //Variable pour l'image de fin de jeu
+            let imageFinJeu = {
+                img: new Image(),
+                urlImage: "images/finJeu0_1.png"
+            }
+            //Charger l'image de fin de jeu
+            imageFinJeu.img.src = imageFinJeu.urlImage;
+
+            //Variables pour les sons du jeu
+            let sonPartie = new Audio("sons/musiqueJeu.mp3");//Son de la partie
+            let sonCollecte = new Audio("sons/sonCollecte.mp3");//Son de collecte de fruit et de base de cupcake
+            let sonRelache = new Audio("sons/sonRelache.mp3");//Son de fruit et de base de cupcake relachées
+            let sonSouris = new Audio("sons/sonSouris.mp3");//Son de la souris
+            let sonFemmeServie = new Audio("sons/sonMiamFemme.mp3");//Son de cliente femme servie
+            let sonHommeServie = new Audio("sons/sonMiamHomme.mp3");//Son de client homme servi
+
+            //Variable pour enregistrer si le son de la musique de jeu joue
+            let sonJoue = false;
+
+            /**********************************************LE DÉMARRAGE DU JEU ET LES ÉCOUTEURS D'ÉVÈNEMENTS***********/
+            //Variable qui servira à enregistrer l'actualisation du jeu avec une intervalle
+            let intervalJeuID;
+            //Variable qui servira à enregistrer l'animation de la patissière avec une intervalle 
+            let intervalImagePatissiereID;
+            //Variable qui servira à enregistrer l'animation de la souris avec une intervalle 
+            let intervalImageSourisID;
+            //Variables qui serviront à enregistrer les animations de chacun des 3 clients avec des intervalles
+            let intervalImageClient1ID;
+            let intervalImageClient2ID;
+            let intervalImageClient3ID;
+
+            //Variable qui servira à enregistrer le décompte de laminuterie du jeu
+            let intervalMinuterieDuJeuID;
+
+            //Variable qui servira à enregistrer l'affichage du score du jeu
+            let intervalAstuceID;
+
+            //Écouteur d'évènements pour que le jeu débute après un clique dans le canva, mais seulement qu'une fois au début
+            leCanvas.addEventListener("click", debuterJeu, {once:true});
+
+            //Écouteurs d'évènements sur le document pour détecter si des touches de clavier sont appuyées ou relâchées
+            document.addEventListener("keydown", presserTouche);
+            document.addEventListener("keyup", relacherTouche);
+
+
+            /**********************************************************LES FONCTIONS*************************************************************/
+            //Fonction pour l'actualisation du jeu
+            function actualiserLeJeu() {
+                //Effacer le contenu actuel du contexte de rendu du canvas
+                ctx.clearRect(0, 0, leCanvas.width, leCanvas.height);
+
+                //Dessiner les trois fruits
+                ctx.drawImage(fruitNumero1.img, fruitNumero1.x, fruitNumero1.y, fruitNumero1.largeur, fruitNumero1.hauteur);
+                ctx.drawImage(fruitNumero2.img, fruitNumero2.x, fruitNumero2.y, fruitNumero2.largeur, fruitNumero2.hauteur);
+                ctx.drawImage(fruitNumero3.img, fruitNumero3.x, fruitNumero3.y, fruitNumero3.largeur, fruitNumero3.hauteur);
+
+                //Dessiner les deux bases de cupcake
+                ctx.drawImage(baseCupcake1.img, baseCupcake1.x, baseCupcake1.y, baseCupcake1.largeur, baseCupcake1.hauteur);
+                ctx.drawImage(baseCupcake2.img, baseCupcake2.x, baseCupcake2.y, baseCupcake2.largeur, baseCupcake2.hauteur);
+
+                //Dessiner le cupcake avec une saveur
+                ctx.drawImage(cupcakeSaveur.img, cupcakeSaveur.x, cupcakeSaveur.y);
+
+                //Appel de la fonction pour déplacer la patissière
+                deplacerLaPatissiere();
+
+                //Appel de la fonction pour faire déplacer la souris
+                deplacerLaSouris();
+
+                //Appel de la fonction pour faire déplacer un client
+                deplacerClient(leClient1);
+                deplacerClient(leClient2);
+                deplacerClient(leClient3);
+
+                //Appel de la fonction pour l'affichage de la minuterie
+                afficherMinuterieDuJeu();
+
+                //Appel de la fonction pour l'affichage du score
+                afficherScoreClient();
+
+                //Appel de la fonction qui affiche le texte d'astuce pour 7 secondes
+                if(minuterie >= 83){
+                    afficherAstuce();
+                }
+
+                //Appels de la fonction pour les trois objets fruits pour créer un cupcake avec une saveur lorsque que les ingrédients sont rassemblés
+                transformerCupcakeSaveur(fruitNumero1);
+                transformerCupcakeSaveur(fruitNumero2);
+                transformerCupcakeSaveur(fruitNumero3);
+
+                //Appels de la fonction pour afficher la bulle de dialogue pour les commandes
+                gererCommandeClient(leClient1, cupcakeClient1);
+                gererCommandeClient(leClient2, cupcakeClient2);
+                gererCommandeClient(leClient3, cupcakeClient3);
+
+                //Appel de la fonction qui s'occupe de changer lka source de l'image de fin
+                gererImageFinJeu();
+
+                //Condition pour appeler la fonction qui gère la fin du jeu lorsque la minuterie est à zéro.
+                if(minuterie <= 0){
+
+                    //Dessiner l'image de fin du jeu
+                    ctx.drawImage(imageFinJeu.img, 0, 0);
+                    //Definir le style du texte de score final
+                    ctx.font = "bold 50px Verdana";
+                    ctx.fillStyle = "#ff0062";
+                    /*ctx.font = "bold 50px Verdana";*/
+                    ctx.strokeStyle = "white";
+                    ctx.textBaseline = "middle";
+                    ctx.textAlign = "center";
+                    //Écrire le score final au milieu du canvas
+                    ctx.fillText(score, leCanvas.width/2, leCanvas.height/2);
+                    ctx.strokeText(score, leCanvas.width/2, leCanvas.height/2);
+
+                    //Indiquer que c'est la fin du jeu
+                    finJeu = true;
+                    //Appel de la fonction qui met fin aux intervalles du jeu 
+                    gererFinJeu();
+                }
+
+                /////////////////////////Détecter s'il y a une collision entre une base de cupcake et la patissière
+                //Base de cupcake 1
+                let collisionPatissiereEtBaseCupcake1 = detecterCollision(laPatissiere, baseCupcake1);
+                if(collisionPatissiereEtBaseCupcake1 && baseCupcakeAttrape == false){
+                    //Appel de la fonction pour afficher en gros la base de cupcake attrapée
+                    afficheBaseCupcakeAttrape(baseCupcake1);
+                    //Indiquer qu'une base a été attrapée
+                    baseCupcakeAttrape = true;
+                    //Indiquer que l'objet base de cupcake a été attrapée
+                    baseCupcake1.estAttrape = true;
+                    //On fait jouer le son de collecte lorsqu'on attrape une base de cupcake
+                    sonCollecte.play();
+                }
+                //Base de cupcake 2
+                let collisionPatissiereEtBaseCupcake2 = detecterCollision(laPatissiere, baseCupcake2);
+       
+                if(collisionPatissiereEtBaseCupcake2 && baseCupcakeAttrape == false){
+                    //Appel de la fonction pour afficher en gros la base de cupcake attrapée
+                    afficheBaseCupcakeAttrape(baseCupcake2);
+                    //Indiquer qu'une base a été attrapée
+                    baseCupcakeAttrape = true;
+                     //Indiquer que l'objet base de cupcake a été attrapée
+                    baseCupcake2.estAttrape = true;
+                    //On fait jouer le son de collecte lorsqu'on attrape une base de cupcake
+                    sonCollecte.play();
+                }
+
+                /////////////////////////Détecter s'il y a une collision entre un fruit et la patissière
+                //Fruit 1 (bleuet)
+                let collisionPatissiereEtFruit1 = detecterCollision(laPatissiere, fruitNumero1);
+                if(collisionPatissiereEtFruit1 && fruitAttrape == false){
+                    afficheFruitAttrape(fruitNumero1);
+                    //Indiquer qu'un fruit a été attrapé
+                    fruitAttrape = true;
+                    //Indiquer que cette objet précisement a été attrapé
+                    fruitNumero1.estAttrape = true;
+                    //Enregistrer quel objet fruit a été attrapé
+                    nomFruitAttrape = fruitNumero1;
+
+                    //On fait jouer le son de collecte lorsqu'on attrape un fruit
+                    sonCollecte.play();
+                }
+
+                //Fruit 2 (fraise)
+                let collisionPatissiereEtFruit2 = detecterCollision(laPatissiere, fruitNumero2);
+                if(collisionPatissiereEtFruit2 && fruitAttrape == false){
+                    afficheFruitAttrape(fruitNumero2);
+                    //Indiquer que le fruit a été attrapé
+                    fruitAttrape = true;
+                    //Indiquer que cette objet précisement a été attrapé
+                    fruitNumero2.estAttrape = true;
+                    //Enregistrer quel objet fruit a été attrapé
+                    nomFruitAttrape = fruitNumero2;
+
+                    //On fait jouer le son de collecte lorsqu'on attrape un fruit
+                    sonCollecte.play();
+                }
+
+                //Fruit 3 (citron)
+                let collisionPatissiereEtFruit3 = detecterCollision(laPatissiere, fruitNumero3);
+                if(collisionPatissiereEtFruit3 && fruitAttrape == false){
+                    afficheFruitAttrape(fruitNumero3);
+                    //Indiquer que le fruit a été attrapé
+                    fruitAttrape = true;
+                    //Indiquer que cette objet précisement a été attrapé
+                    fruitNumero3.estAttrape = true;
+                    //Enregistrer quel objet fruit a été attrapé
+                    nomFruitAttrape = fruitNumero3;
+
+                    //On fait jouer le son de collecte lorsqu'on attrape un fruit
+                    sonCollecte.play();
+                }
+
+                //Gestion quand la souris entre en collision avec la patissière
+                let collisionPatissiereEtSouris = detecterCollision(laPatissiere, laSouris);
+                if(collisionPatissiereEtSouris){
+                    //On inverse la vitesse X et la vitesse Y de la souris lorsqu'il y a une collision
+                    laSouris.vitesseX *= -1;
+                    laSouris.vitesseY *= -1;
+                    //On fait jouer le son de la souris
+                    sonSouris.play();
+
+                    //Les deux conditions permettent de pas avoir de collisions multiples et d'éviter le blocage de la souris en dehors des limites accidentellement
+                    if(collisionPatissiereEtSouris && laSouris.vitesseX > 0 && (laSouris.y > laPatissiere.y - laSouris.hauteur || laSouris.y < laPatissiere.y + laPatissiere.hauteur) && (laSouris.x > laPatissiere.x - laSouris.largeur && laSouris.x < laPatissiere.x + laPatissiere.largeur)){
+                            laSouris.x = laPatissiere.x + laPatissiere.largeur;
+                            console.log(laSouris.vitesseX);               
+                        }
+                    
+                    if(collisionPatissiereEtSouris && laSouris.vitesseX < 0 && (laSouris.y > laPatissiere.y - laSouris.hauteur || laSouris.y < laPatissiere.y + laPatissiere.hauteur) && (laSouris.x > laPatissiere.x - laSouris.largeur && laSouris.x < laPatissiere.x + laPatissiere.largeur)){
+                            laSouris.x = laPatissiere.x - laSouris.largeur;
+                            console.log(laSouris.vitesseX);               
+                        }
+
+                    //Si la patissière transporte un cupcake avec une saveur lors de la collision, la souris "mange" son cupcake et les ingrédients se redisperse
+                    if(fruitAttrape && baseCupcakeAttrape){
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero3);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero3);
+                    }
+                }
+
+                //Gestion des collisions entre le cupcake de la patissière et le cupcake du client
+                //Cupcake à saveur et le cupcake du client #1
+                let collisionLes2Cupcakes1 = detecterCollision(cupcakeSaveur, cupcakeClient1);
+                if(collisionLes2Cupcakes1){
+                    if(cupcakeSaveur.numCupcake == cupcakeClient1.numCupcake){
+                        //Appel de la fonction pour relacher le fruit et la base de cupcake qui ont été ramassés 
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero3);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero3);
+                        //Indiquer que le client a été servi
+                        leClient1.estServi = true;
+                        //Appel de la fonction pour incrémenter le score
+                        gererScoreClient();
+                        //Appel de la fonction pour jouer le son du client servi
+                        gererSonClientServi(leClient1);
+                    }
+                }
+
+                //Cupcake à saveur et le cupcake du client #2
+                let collisionLes2Cupcakes2 = detecterCollision(cupcakeSaveur, cupcakeClient2);
+                if(collisionLes2Cupcakes2){
+                    if(cupcakeSaveur.numCupcake == cupcakeClient2.numCupcake){
+                        //Appel de la fonction pour relacher le fruit et la base de cupcake qui ont été ramassés                        
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero3);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero3);
+                        //Indiquer que le client a été servi
+                        leClient2.estServi = true
+                        //Appel de la fonction pour incrémenter le score
+                        gererScoreClient();
+                        //Appel de la fonction pour jouer le son du client servi
+                        gererSonClientServi(leClient2);
+                    }
+                }
+
+                //Cupcake à saveur et le cupcake du client #3
+                let collisionLes2Cupcakes3 = detecterCollision(cupcakeSaveur, cupcakeClient3);
+                if(collisionLes2Cupcakes3){
+                    if(cupcakeSaveur.numCupcake == cupcakeClient3.numCupcake){
+                        //Appel de la fonction pour relacher le fruit et la base de cupcake qui ont été ramassés  
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake1, fruitNumero3);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero1);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero2);
+                        relacherCupcakeSaveur(baseCupcake2, fruitNumero3);
+                        //Indiquer que le client a été servi
+                        leClient3.estServi = true
+                        //Appel de la fonction pour incrémenter le score
+                        gererScoreClient();
+                        //Appel de la fonction pour jouer le son du client servi
+                        gererSonClientServi(leClient3);
+                    }
+                }
+            }
+
+            //Fonction pour débuter le jeu 
+            function debuterJeu() {
+                //Afficher l'arrière-plan
+                leCanvas.style.backgroundImage = "url('images/fondJeu.png')";
+
+                //Débuter la musique du jeu
+                sonPartie.play();
+
+                //Débuter la boucle du jeu
+                intervalJeuID = setInterval(actualiserLeJeu, 1000 / 60);
+
+                //Débuter l'animation de la patissière
+                intervalImagePatissiereID = setInterval(gererImagePatissiere, 1000/9);
+
+                //Débuter l'animation de la souris
+                intervalImageSourisID = setInterval(gererImageSouris, 1000/12); /*Bien qu'il y ait 6 vignettes, l'intervalle est à 12 IPS pour avoir une animation plus rapide*/
+
+                //Débuter l'animation du client #1
+                intervalImageClient1ID = setInterval(function() {gererImageClient(leClient1);}, 1000/9);
+
+                //Débuter l'animation du client #2
+                intervalImageClient2ID = setInterval(function() {gererImageClient(leClient2);}, 1000/9);
+
+                //Débuter l'animation du client #3
+                intervalImageClient3ID = setInterval(function() {gererImageClient(leClient3);}, 1000/9);
+
+                //Débuter le décompte de la minuterie
+                intervalMinuterieDuJeuID = setInterval(gererMinuterieDuJeu, 1000);
+            }
+            
+            //Fonction pour le déplacement de la patissière
+            function deplacerLaPatissiere(){
+                if(fleches.gauche){
+                    //On décrémente la position X de la patissière avec sa vitesse pour aller vers la gauche
+                    laPatissiere.x -= laPatissiere.vitesse;
+                    //On change la source de l'image de la patissière pour qu'elle marche vers la gauche
+                    laPatissiere.img.src = "images/marcheGauche.png";
+                }
+
+                if(fleches.droite){
+                    //On incrémente la position X de la patissière avec sa vitesse pour aller vers la droite
+                    laPatissiere.x += laPatissiere.vitesse;
+                    //On change la source de l'image de la patissière pour qu'elle marche vers la droite
+                    laPatissiere.img.src = "images/marcheDroite.png";
+                }
+
+                if(fleches.haut){
+                    //On décrémente la position Y de la patissière avec sa vitesse pour aller vers le haut
+                    laPatissiere.y -= laPatissiere.vitesse;
+                    //On change la source de l'image de la patissière pour qu'elle marche vers le haut
+                    laPatissiere.img.src = "images/marcheHaut.png";
+                }
+
+                if(fleches.bas){
+                    //On incrémente la position Y de la patissière avec sa vitesse pour aller vers le bas
+                    laPatissiere.y += laPatissiere.vitesse;
+                    //On change la source de l'image de la patissière pour qu'elle marche vers le bas
+                    laPatissiere.img.src = "images/marcheBas.png";
+                }
+
+                //Gestion des limites de jeu pour la patissière à la verticale
+                if(laPatissiere.y < 155){
+                    laPatissiere.y = 155; /*La patissière se rend jusqu'à 155px en hauteur pour donner de la dimension et donner l'impression qu'elle est debout dans un environnement*/
+                }
+                //Variable pour la limite maximum sur la hauteur
+                let yMax = limiteYMax - laPatissiere.hauteur;
+
+                if(laPatissiere.y > yMax){
+                    laPatissiere.y = yMax;
+                }
+
+                //Gestion des limites de jeu pour la patissière sur l'horizontale
+                if(laPatissiere.x < limiteXMin){
+                    laPatissiere.x = limiteXMin;
+                }
+                
+                //Variable pour la limite maximum sur la largeur
+                let xMax = limiteXMax - laPatissiere.largeur;
+                if(laPatissiere.x > xMax){
+                    laPatissiere.x = xMax;
+                }
+
+                //Dessiner la patissière
+                ctx.drawImage(laPatissiere.img, laPatissiere.sourceX, 0, laPatissiere.largeur, laPatissiere.hauteur, laPatissiere.x, laPatissiere.y, laPatissiere.largeur, laPatissiere.hauteur);
+            }
+
+            //Fonction pour gérer la vignette à afficher pour l'animation de la patissière
+            function gererImagePatissiere(){
+                //Définir la coordonnée sourceX de la vignette à afficher
+                laPatissiere.sourceX = laPatissiere.indexVignette * laPatissiere.largeur;
+
+                //Incrémenter et gérer l’index de la prochaine vignette à afficher
+                laPatissiere.indexVignette += 1;
+
+                if (laPatissiere.indexVignette == laPatissiere.nbVignettes) {
+                    laPatissiere.indexVignette = 0;
+                }
+            }
+
+            //Fonction pour le déplacement de la souris 
+            function deplacerLaSouris(){
+                //Incrémenter la vitesse X et la vitesse Y de la souris pour qu'elle se déplace seule
+                laSouris.x += laSouris.vitesseX;
+                laSouris.y += laSouris.vitesseY;
+
+                //Gestion des limites de jeu pour la souris à la verticale
+                //Variable pour la limite maximum sur la hauteur
+                //Limite max sur l'axe des Y
+                let yMax = limiteYMax - laSouris.hauteur;
+                if(laSouris.y > yMax){
+                    laSouris.y = yMax;
+                    laSouris.vitesseY *= -1;
+                }
+                //Limite min sur l'axe des Y
+                if(laSouris.y < limiteYMin){
+                    laSouris.y = limiteYMin;
+                    laSouris.vitesseY *= -1;
+                }
+
+                //Gestion des limites de jeu pour la souris sur l'horizontale
+                //Variable pour la limite maximum sur la largeur
+                //Limite max sur l'axe des X
+                let xMax = limiteXMax - laSouris.largeur;
+
+                if(laSouris.x < limiteXMin){
+                    laSouris.x = limiteXMin
+                    laSouris.vitesseX *= -1;
+
+                }
+                //Limite min sur l'axe des X
+                if(laSouris.x > xMax){
+                    laSouris.x = xMax
+                    laSouris.vitesseX *= -1;
+                }
+
+                //Changement de la source de l'image de la souris dépendemment si la vitesse X est négative ou positive
+                if(laSouris.vitesseX > 0){
+                    //Quand la souris va vers la gauche
+                    laSouris.img.src = "images/sourisCourirGauche.png";
+                } else{
+                    //Quand la souris vas vers la droite
+                    laSouris.img.src = "images/sourisCourirDroite.png";
+                }
+                //Dessiner la souris
+                ctx.drawImage(laSouris.img, laSouris.sourceX, 0, laSouris.largeur, laSouris.hauteur, laSouris.x, laSouris.y, laSouris.largeur, laSouris.hauteur);
+            }
+
+            function gererImageSouris(){
+                //Définir la coordonnée sourceX de la vignette à afficher
+                laSouris.sourceX = laSouris.indexVignette * laSouris.largeur;
+
+                //Incrémenter et gérer l’index de la prochaine vignette à afficher
+                laSouris.indexVignette += 1;
+
+                if (laSouris.indexVignette == laSouris.nbVignettes) {
+                    laSouris.indexVignette = 0;
+                }
+            }
+
+            //Fonction pour gérer le déplacement du client
+            function deplacerClient(unClient){
+                //Si le client n'est pas servi, on le fait avancer vers le comptoir
+                if(unClient.estServi == false){
+                    //Incrémenter la position X
+                    unClient.x += unClient.vitesse;
+                    //Changer la source de l'image pour que le client aille vers la droite                  
+                    unClient.img.src = "images/clientDroite" + unClient.numClient + ".png";
+                }
+                //Si le client est servi, on le fait quitter vers la l'exterieur du canvas
+                if(unClient.estServi){
+                    //Décrementer la position X
+                    unClient.x -= unClient.vitesse;
+                    //Changer la source de l'image pour que le client aille vers la gauche              
+                    unClient.img.src = "images/clientGauche" + unClient.numClient + ".png";
+                }
+
+                //Gestion des limites
+                if(unClient.x > limiteXMin - unClient.largeur*2 && unClient.estServi == false){
+                    unClient.x = limiteXMin - unClient.largeur*2;
+                    /*unClient.vitesse = 0;*/
+                    unClient.img.src = "images/clientArret" + unClient.numClient + ".png";
+                }
+
+                if(unClient.x <= -65){
+                    unClient.estServi = false;
+                    unClient.numClient = Math.ceil(Math.random()*6);
+                }
+                //Dessiner le client
+                ctx.drawImage(unClient.img, unClient.sourceX, 0, unClient.largeur, unClient.hauteur, unClient.x, unClient.y, unClient.largeur, unClient.hauteur);
+            }
+
+            function gererImageClient(leClient){
+                //Définir la coordonnée sourceX de la vignette à afficher
+                leClient.sourceX = leClient.indexVignette * leClient.largeur;
+
+                //Incrémenter et gérer l’index de la prochaine vignette à afficher
+                leClient.indexVignette += 1;
+
+                if (leClient.indexVignette == leClient.nbVignettes) {
+                    leClient.indexVignette = 0;
+                }
+            }
+
+            //Fonction pour gérer lorsqu'un fruit est attrapé
+            function afficheFruitAttrape(unFruitAttrape){
+                //Grossir l'image du fruit
+                unFruitAttrape.largeur*=2;
+                unFruitAttrape.hauteur*=2;
+
+                //Repositionner le fruit en haut à droite du canvas
+                unFruitAttrape.x = leCanvas.width - 135;
+                unFruitAttrape.y = unFruitAttrape.hauteur - 9;
+            }
+
+            //Fonction pour relacher un fruit attrapé
+            function relacherFruit(fruitRelache){
+                //Rapetisser l'image du fruit pour la remettre à sa grosseur normale
+                fruitRelache.largeur*=1/2;
+                fruitRelache.hauteur*=1/2;
+
+                //Appeler la fonction qui repositionne le fruit
+                gererPositionFruit(fruitRelache);
+
+                //Definir qu'il n'y a plus de fruit attrapé                    
+                fruitAttrape = false;
+
+                //Indiquer que cette objet fruit n'est plus attrapé
+                fruitRelache.estAttrape = false;
+                
+                //On met le numéro de cupcake à zéro pour de servir des clients de manière répéter (contrer un bug)
+                cupcakeSaveur.numCupcake = 0;
+
+                //On active le son de relache à toutes les fois que la fonction est appelée
+                sonRelache.play();
+            }
+
+            //Fonction pour gérer l'apparition à des positions aléatoires des fruits et la gestion de leur limites dans le canvas
+            function gererPositionFruit(unFruit){
+                //Positionnement aléatoire d'un fruit dans les limites de jeu
+                //Sur l'axe horizontal
+                unFruit.x = Math.random()*(leCanvas.width - 285) + 285;
+                //Sur l'axe vertical
+                unFruit.y = Math.random()*(leCanvas.height - 230) + 230;
+
+                //S'il y a une collision entre le fruit et la patissière lors du positionnement, on le replace encore
+                let collisionPositionnementFruit = detecterCollision(unFruit, laPatissiere);
+                if(collisionPositionnementFruit){
+                    //Sur l'axe horizontal
+                    unFruit.x = Math.random()*(leCanvas.width - 285) + 285;
+                    //Sur l'axe vertical
+                    unFruit.y = Math.random()*(leCanvas.height - 230) + 230;
+                }
+
+                //Variables pour enregistrer la limite maximum sur la largeur et la hauteur pour le fruit
+                let xMax = leCanvas.width - unFruit.largeur - 75;
+                let yMax = leCanvas.height - unFruit.hauteur - 27;
+
+                //Si le fruit apparait à l'extérieur des limites du jeu, il est repositionné à l'extrémité de la limite
+                //Horizontalement
+                if(unFruit.x > xMax){
+                    unFruit.x = xMax;
+                }
+                //Verticalement
+                if(unFruit.y > yMax){
+                    unFruit.y = yMax;
+                }
+
+                //Variable pour enregistrer un nombre entier entre 1 et 3 qui déterminera la source de l'image du fruit
+                let nombreFruitHasard = Math.ceil(Math.random()*3);
+                //Gestion de la source de l'image du fruit
+                unFruit.img.src = "images/fruit" + nombreFruitHasard + ".png";
+                //Enregistrer une nouvelle valeur un numéro de fruit
+                unFruit.numFruit = nombreFruitHasard;
+            }
+
+            //Fonction pour gérer lorsqu'une base de cupcake est attrapée
+            function afficheBaseCupcakeAttrape(unBaseCupcakeAttrape){
+                //Grossir l'image de la base de cupcake
+                unBaseCupcakeAttrape.largeur*=2;
+                unBaseCupcakeAttrape.hauteur*=2;
+
+                //Repositionner la base de cupcake en haut à droite du canvas
+                unBaseCupcakeAttrape.x = leCanvas.width - 215;
+                unBaseCupcakeAttrape.y = 37;
+            }
+
+            //Fonction pour relacher une base de cupcake attrapée
+            function relacherCupcakeSaveur(laBaseCupcakeRelache, leFruitRelache){
+                if(laBaseCupcakeRelache.estAttrape && leFruitRelache.estAttrape){
+                    //Rapetisser l'image de la base de cupcake pour la remettre à sa grosseur normale
+                    laBaseCupcakeRelache.largeur*=1/2;
+                    laBaseCupcakeRelache.hauteur*=1/2;
+
+                    //Rapetisser l'image du fruit attrapé pour la remettre à sa grosseur normale
+                    leFruitRelache.largeur*=1/2;
+                    leFruitRelache.hauteur*=1/2;
+
+                    //Appeler la fonction qui repositionne la base de cupcake
+                    gererPositionBaseCupcake(laBaseCupcakeRelache);
+
+                    //Appeler la fonction qui repositionne le fruit
+                    gererPositionFruit(leFruitRelache);
+
+                    //Définir qu'il n'y a plus de base de cupcake attrapée         
+                    baseCupcakeAttrape = false;
+
+                    //Définir qu'il n'y a plus de fruit attrapé
+                    fruitAttrape = false;
+
+                    //On met le numéro de cupcake à zéro pour de servir des clients de manière répéter (contrer un bug)
+                    cupcakeSaveur.numCupcake = 0;
+
+                    //Indiquer que cette objet fruit n'est plus attrapé
+                    leFruitRelache.estAttrape = false;   
+                    //Indiquer que cette objet base de cupcake n'est plus attrapé
+                    laBaseCupcakeRelache.estAttrape = false;
+                    
+                //On active le son de relache à toutes les fois que la fonction est appelée
+                sonRelache.play();
+                }
+            }
+
+            //Fonction pour gérer l'apparition à des positions aléatoires des bases de cupcake et la gestion de leur limites dans le canvas
+            function gererPositionBaseCupcake(uneBaseCupcake){
+                //Positionnement aléatoire d'une base de cupcake dans les limites de jeu
+                //Sur l'axe horizontal
+                uneBaseCupcake.x = Math.random()*(leCanvas.width - 285) + 285;
+                //Sur l'axe vertical
+                uneBaseCupcake.y = Math.random()*(leCanvas.height - 230) + 230;
+
+                //
+                let collisionPositionnementBaseCupcake = detecterCollision(uneBaseCupcake, laPatissiere);
+                if(collisionPositionnementBaseCupcake){
+                    //Sur l'axe horizontal
+                    uneBaseCupcake.x = Math.random()*(leCanvas.width - 285) + 285;
+                    //Sur l'axe vertical
+                    uneBaseCupcake.y = Math.random()*(leCanvas.height - 230) + 230;
+                }
+
+                //Variables pour enregistrer la limite maximum sur la largeur et la hauteur pour la base de cupcake
+                let xMax = leCanvas.width - uneBaseCupcake.largeur - 75;
+                let yMax = leCanvas.height - uneBaseCupcake.hauteur - 27;
+
+                //Si la base de cupcake apparait à l'extérieur des limites du jeu, elle est repositionnée à l'extrémité de la limite
+                //Horizontalement
+                if(uneBaseCupcake.x > xMax){
+                    uneBaseCupcake.x = xMax;
+                }
+                //Verticalement
+                if(uneBaseCupcake.y > yMax){
+                    uneBaseCupcake.y = yMax;
+                }
+            }
+
+            //Fonction pour gérer la transformation des ingrédients en un cupcake avec une saveur
+            function transformerCupcakeSaveur(leFruit){
+                //Si l'objet fruit est attrapé et qu'une base de cupcake est attrapé, un cupcake avec une saveur apparait
+                if(leFruit.estAttrape && baseCupcakeAttrape){
+                    //Changer la source de l'image de cupcake à saveur
+                    cupcakeSaveur.img.src = "images/cupcakeSaveur" + leFruit.numFruit + ".png";
+                    //Changer le numéro de cupcake pour le numéro de fruit pour correspondre
+                    cupcakeSaveur.numCupcake = leFruit.numFruit;
+                    //Déplacer le cupcake à saveur au dessus de la patissière
+                    cupcakeSaveur.x = laPatissiere.x -30;
+                    cupcakeSaveur.y = laPatissiere.y - cupcakeSaveur.hauteur;  
+                } 
+                //le cupcake avec une saveur retourne caché en dehors du canvas si la base de cupcake ou un fruit n'est pas attrapé
+                if(fruitAttrape == false || baseCupcakeAttrape == false){
+                    cupcakeSaveur.x = -100;
+                    cupcakeSaveur.y = -100;  
+                }
+            }
+
+            //Fonction pour gérer les commandes des clients
+            function gererCommandeClient(client, cupcakeSaveurClient){
+                if(client.x == limiteXMin - client.largeur*2){
+                    //Si le client arrive au comptoir, on fait déplacer son cupcake à coté de lui
+                    cupcakeSaveurClient.x = client.x + 56;
+                    cupcakeSaveurClient.y = client.y - 40;
+                    //On dessine la bulle de dialogue et le cupcake
+                    ctx.drawImage(bulleClient.img, client.x + 45, client.y - 45);
+                    ctx.drawImage(cupcakeSaveurClient.img, cupcakeSaveurClient.x, cupcakeSaveurClient.y);
+                }
+
+                //Si un client est servi, on fait apparaitre un coeur au dessus de sa tête
+                if(client.estServi){
+                    ctx.drawImage(coeur.img, client.x, client.y - 40);
+                }
+
+                //Si le client se retrouve en dehors du canvas, à -65px, on lui fait changé la source de l'image de son fruit(Saveur)
+                if(client.x <= -65){
+                    //Variable pour enregistrer un nombre entier entre 1 et 3 qui déterminera la source de l'image du fruit(Saveur)
+                    let nombreSaveurHasard = Math.ceil(Math.random()*3);
+                    //Gestion de la source de l'image du fruit
+                    cupcakeSaveurClient.img.src = "images/cupcakeSaveur" + nombreSaveurHasard + ".png";
+                    //Enregistrer une nouvelle valeur un numéro de fruit
+                    cupcakeSaveurClient.numCupcake = nombreSaveurHasard;
+                }
+            }
+
+            //Fonction pour afficher une astuce au joueur au debut du jeu
+            function afficherAstuce(){
+                //Définir le style de l'astuce écrite
+                ctx.font = "bold 15px Verdana";
+                ctx.fillStyle = "white";
+                ctx.textBaseline = "middle";
+                //Écrire l'astuce au bas du canvas
+                ctx.fillText("Astuce: Si aucun des fruits présents ne te plaît, tu peux jeter un fruit  en cliquant sur X et un tout nouveau apparaîtra!", leCanvas.width/2, leCanvas.height - 10);  
+            }
+            
+            //Fonction pour l'affichage de la minuterie du jeu 
+            function afficherMinuterieDuJeu(){
+                //Définir le style de la minuterie écrite
+                ctx.font = "bold 40px Verdana";
+                ctx.fillStyle = "#ab1336";
+                ctx.textBaseline = "middle";
+                //Écrire le temps de la minuterie dans son cadre
+                ctx.fillText(minuterie, leCanvas.width/2, 82);
+            }
+
+            //Fonction pour la gestion de la minuterie du jeu
+            function gererMinuterieDuJeu(){
+                minuterie--;
+            }
+
+            //Fonction pour afficher le score
+            function afficherScoreClient(){
+                //Définir le style du score écrit
+                ctx.font = "bold 40px Verdana";
+                ctx.fillStyle = "#ab1336";
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                //Écrire le score dans son cadre
+                ctx.fillText(score, 224, 82);
+            }
+
+            //Fonction pour incrémenter le score
+            function gererScoreClient(){
+                score++;
+            }
+
+            //////////////////////////////////////////////////////////////////////////
+            //Fonction pour gérer l'image de fin de jeu
+            function gererImageFinJeu(){
+                //On affiche l'image de fin appropriée dépendemment du score final
+                if(score <= 1){
+                    imageFinJeu.img.src = "images/finJeu0_1.png";
+                }
+
+                if(score >= 2 && score <= 4){
+                    imageFinJeu.img.src = "images/finJeu2_4.png";
+                }
+
+                if(score >= 5 && score <= 7){
+                    imageFinJeu.img.src = "images/finJeu5_7.png";
+                }
+
+                if(score >= 8 && score <= 10){
+                    imageFinJeu.img.src = "images/finJeu8_10.png";
+                }
+
+                if(score > 10){
+                    imageFinJeu.img.src = "images/finJeu11Plusp.png";
+                }
+            }
+
+            //Fonction pour gérer la fin du jeu 
+            function gererFinJeu(){
+                //On met fin aux intervalles du jeu
+                clearInterval(intervalJeuID);
+                clearInterval(intervalMinuterieDuJeuID);
+                clearInterval(intervalImagePatissiereID);
+            }
+
+            //Fonction qui s'occupe de faire jouer le bon dépendemment du client servi
+            function gererSonClientServi(leClientServi){
+                if(leClientServi.numClient <= 4){
+                    sonFemmeServie.play();
+                } else if (leClientServi.numClient >= 5 && leClientServi.numClient <= 6){
+                    sonHommeServie.play();
+                }
+            }
+
+            //Fonction pour la détection des touches pressée
+            function presserTouche(event) {
+                //Enregistrer si une touche gauche/droite/haut/bas est pressée
+                //flèche droite
+                if (event.keyCode == 39) {
+                    fleches.droite = true;
+                }
+                //flèche gauche
+                if (event.keyCode == 37) {
+                    fleches.gauche = true;
+                }
+                //flèche haut
+                if (event.keyCode == 38) {
+                    fleches.haut = true;
+                }
+                //flèche bas
+                if (event.keyCode == 40) {
+                    fleches.bas = true;
+                }
+            }
+
+            //Fonction pour la détection des touches relachées
+            function relacherTouche(event) {                
+                //Enregistrer si une touche gauche/droite/haut/bas est relachée
+                //flèche droite
+                if (event.keyCode == 39) {
+                    fleches.droite = false;
+                    //On change la source de l'image pour que la patissière soit à l'arrêt vers la droite
+                    laPatissiere.img.src = "images/arretDroite.png";
+                }
+                //flèche gauche
+                if (event.keyCode == 37) {
+                    fleches.gauche = false;
+                    //On change la source de l'image pour que la patissière soit à l'arrêt vers la gauche
+                    laPatissiere.img.src = "images/arretGauche.png";
+                }
+                //flèche haut
+                if (event.keyCode == 38) {
+                    fleches.haut = false;
+                    //On change la source de l'image pour que la patissière soit à l'arrêt vers le haut
+                    laPatissiere.img.src = "images/arretHaut.png";
+                }
+                //flèche bas
+                if (event.keyCode == 40) {
+                    fleches.bas = false;
+                    //On change la source de l'image pour que la patissière soit à l'arrêt vers le bas
+                    laPatissiere.img.src = "images/arretBas.png";
+                }
+
+                //Detection si la barre d'espace est relaché lorsque le jeu est terminé pour pouvoir recommencer le jeu en rechargant la page
+                if(event.keyCode == 32 && finJeu){
+                    location.reload();
+                }
+
+                //Detection si la touche X est relaché et que la patissière a attrapé un fruit pour le relacher
+                if(event.keyCode == 88 && fruitAttrape){
+                    relacherFruit(nomFruitAttrape);
+                } 
+
+                //Detection si la touche M est relaché pour mettre la musique sur pause ou la faire jouer
+                if(event.keyCode == 77){
+                    sonJoue = !sonJoue;
+                    if(sonJoue){
+                        sonPartie.pause();
+                    }else{
+                        sonPartie.play();
+                    }
+                }
+            }
+
+            //Fonction pour détecter si deux objets de forme rectangulaire se touchent
+            function detecterCollision(rectangle1, rectangle2) {
+                if (
+                    rectangle1.x < rectangle2.x + rectangle2.largeur &&
+                    rectangle1.x + rectangle1.largeur > rectangle2.x &&
+                    rectangle1.y < rectangle2.y + rectangle2.hauteur &&
+                    rectangle1.y + rectangle1.hauteur > rectangle2.y
+                ) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        </script>
+
+    </body>
