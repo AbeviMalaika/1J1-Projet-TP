@@ -8,6 +8,15 @@
                 border: 2px solid rgb(235, 75, 115);
                 cursor: pointer;
             }
+
+            body{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: pink;
+            }
         </style>
     </head>
     <body>
@@ -62,7 +71,6 @@
             //Placer la souris au bas à droite du terrain de jeu
             laSouris.x = leCanvas.width - 155;
             laSouris.y = leCanvas.height - 75;
-
 
             //Les trois objets client
             ///////////////////////////////Premier client
@@ -791,6 +799,23 @@
                 //Incrémenter la vitesse X et la vitesse Y de la souris pour qu'elle se déplace seule
                 laSouris.x += laSouris.vitesseX;
                 laSouris.y += laSouris.vitesseY;
+                                                    // subtract (= difference vector)
+                                                    //let distanceX = laPatissiere.x - laSouris.x;
+                                                    //let distanceY = laPatissiere.y - laSouris.y;
+
+                                                    // normalize (= direction vector)
+                                                    // (a direction vector has a length of 1)
+                                                    /*let trajet = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                                                    if (trajet) {
+                                                    distanceX /= trajet;
+                                                    distanceY /= trajet;
+                                                    }*/
+
+                                                    // move
+                                                    // delta is the elapsed time in seconds
+                                                    // SPEED is the speed in units per second (UPS)
+                                                    //laSouris.x += distanceX * 0.5 * laSouris.vitesseX;
+                                                    //laSouris.y += distanceY * 0.5 * laSouris.vitesseX;
 
                 //Gestion des limites de jeu pour la souris à la verticale
                 //Variable pour la limite maximum sur la hauteur
